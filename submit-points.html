@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Points - Temple Points Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 2rem auto;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #444;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .points-input {
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .tips {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+        }
+
+        .tips h3 {
+            color: #444;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tips ul {
+            margin-left: 1.5rem;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .tips li {
+            margin-bottom: 0.25rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 1rem auto;
+            }
+
+            .form-card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <h1>🎯 Submit Your Points</h1>
+            <p class="subtitle">Every temple ordinance counts towards your ward's goal!</p>
+
+            <div class="success-message" id="successMessage">
+                🎉 Points submitted successfully! Waiting for ward leader approval.
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Something went wrong. Please try again.
+            </div>
+
+            <form id="pointsForm">
+                <div class="form-group">
+                    <label for="name">Your Name *</label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label for="ward">Select Your Ward *</label>
+                    <select id="ward" name="ward" required>
+                        <option value="">Choose your ward...</option>
+                        <option value="1">Fountain Green 1st Ward</option>
+                        <option value="2">Fountain Green 2nd Ward</option>
+                        <option value="3">Fountain Green 3rd Ward</option>
+                        <option value="4">Moroni 1st Ward</option>
+                        <option value="5">Moroni 2nd Ward</option>
+                        <option value="6">Moroni 3rd Ward</option>
+                        <option value="7">Sanpitch Ward</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="points">Number of Points *</label>
+                    <input type="number" id="points" name="points" required min="1" max="1000" 
+                           placeholder="Enter points earned" class="points-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="note">Notes (Optional)</label>
+                    <textarea id="note" name="note" 
+                              placeholder="E.g., Family baptisms - 5 people, Endowment session, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">
+                    Submit Points
+                </button>
+            </form>
+
+            <div class="tips">
+                <h3>💡 Point Values:</h3>
+                <ul>
+                    <li>Baptism/Confirmation: 1 point each</li>
+                    <li>Initiatory: 1 point</li>
+                    <li>Endowment: 1 point</li>
+                    <li>Sealing: 1 point</li>
+                    <li>Family names: Double points!</li>
+                </ul>
+            </div>
+
+            <a href="/" class="back-link">← Back to Leaderboard</a>
+        </div>
+    </div>
+
+    <script>
+        // Load saved data from cookie/localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedName = localStorage.getItem('submitterName');
+            const savedWard = localStorage.getItem('submitterWard');
+            
+            if (savedName) {
+                document.getElementById('name').value = savedName;
+            }
+            if (savedWard) {
+                document.getElementById('ward').value = savedWard;
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('pointsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const successMsg = document.getElementById('successMessage');
+            const errorMsg = document.getElementById('errorMessage');
+            
+            // Hide messages
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            // Get form data
+            const formData = {
+                ward_id: parseInt(document.getElementById('ward').value),
+                submitter_name: document.getElementById('name').value,
+                points: parseInt(document.getElementById('points').value),
+                note: document.getElementById('note').value
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('submitterName', formData.submitter_name);
+            localStorage.setItem('submitterWard', formData.ward_id);
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            
+            try {
+                const response = await fetch('/api/points', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    successMsg.style.display = 'block';
+                    document.getElementById('pointsForm').reset();
+                    // Restore saved name and ward
+                    document.getElementById('name').value = formData.submitter_name;
+                    document.getElementById('ward').value = formData.ward_id;
+                    
+                    // Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 3000);
+                } else {
+                    throw new Error('Failed to submit');
+                }
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Points';
+            }
+        });
+    </script>
+</body>
+</html>

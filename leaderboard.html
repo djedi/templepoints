@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temple Points Tracker - Leaderboard</title>
+    <title>Temple Points Challenge 🏆</title>
     <style>
         * {
             margin: 0;
@@ -13,36 +13,121 @@
 
         body {
             font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
             line-height: 1.6;
+            min-height: 100vh;
         }
 
         .header {
-            background-color: #006594;
+            background: linear-gradient(135deg, #006594 0%, #0084c7 100%);
             color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
         }
 
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 400;
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.05) 10px,
+                rgba(255,255,255,0.05) 20px
+            );
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
             text-align: center;
         }
 
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .goal-banner {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .goal-banner span {
+            font-size: 1.125rem;
+            font-weight: 500;
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 1rem;
         }
 
-        .sort-controls {
-            background-color: white;
-            border-radius: 8px;
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
             padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #006594;
+        }
+
+        .sort-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .sort-controls label {
@@ -50,103 +135,281 @@
             font-size: 0.875rem;
             color: #666;
             margin-bottom: 0.5rem;
+            font-weight: 500;
         }
 
         .sort-controls select {
             width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 1rem;
             background-color: white;
+            transition: border-color 0.3s;
+        }
+
+        .sort-controls select:focus {
+            outline: none;
+            border-color: #006594;
         }
 
         .leaderboard {
-            background-color: white;
-            border-radius: 8px;
+            background: white;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .leaderboard-header {
-            background-color: #f8f8f8;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             padding: 1rem;
-            border-bottom: 2px solid #006594;
             display: grid;
-            grid-template-columns: 50px 1fr auto auto;
+            grid-template-columns: 60px 1fr 150px auto;
             gap: 1rem;
             font-weight: 600;
             font-size: 0.875rem;
-            color: #666;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .ward-row {
             padding: 1rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
             display: grid;
-            grid-template-columns: 50px 1fr auto auto;
+            grid-template-columns: 60px 1fr 150px auto;
             gap: 1rem;
             align-items: center;
-            transition: background-color 0.2s;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ward-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+            transition: width 0.3s;
+        }
+
+        .ward-row:hover::before {
+            width: 100%;
         }
 
         .ward-row:hover {
-            background-color: #f8f8f8;
+            transform: translateX(5px);
+        }
+
+        .ward-row.leader {
+            background: linear-gradient(90deg, rgba(255,215,0,0.1) 0%, rgba(255,215,0,0.05) 100%);
         }
 
         .rank {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            font-weight: 600;
-            font-size: 1.125rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            position: relative;
+            z-index: 1;
         }
 
         .rank-1 {
-            background-color: #ffd700;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #333;
+            box-shadow: 0 4px 12px rgba(255,215,0,0.4);
+            animation: bounce 2s infinite;
+        }
+
+        .rank-1::after {
+            content: '👑';
+            position: absolute;
+            top: -15px;
+            font-size: 1.25rem;
+            animation: crown-float 2s ease-in-out infinite;
+        }
+
+        @keyframes crown-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
         }
 
         .rank-2 {
-            background-color: #c0c0c0;
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
             color: #333;
+            box-shadow: 0 4px 12px rgba(192,192,192,0.4);
         }
 
         .rank-3 {
-            background-color: #cd7f32;
+            background: linear-gradient(135deg, #cd7f32 0%, #e4a853 100%);
             color: white;
+            box-shadow: 0 4px 12px rgba(205,127,50,0.4);
         }
 
         .rank-other {
-            background-color: #e0e0e0;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
             color: #666;
         }
 
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ward-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
         .ward-name {
-            font-weight: 500;
+            font-weight: 600;
             color: #333;
+            font-size: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 1s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255,255,255,0.3),
+                transparent
+            );
+            animation: progress-shine 2s linear infinite;
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
         }
 
         .points {
-            text-align: right;
+            text-align: center;
+            position: relative;
         }
 
         .points-verified {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #006594;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .points-label-small {
+            font-size: 0.625rem;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .points-total {
             font-size: 0.875rem;
             color: #666;
+            margin-top: 0.25rem;
         }
 
         .points-pending {
             color: #f5a623;
+            font-weight: 600;
+        }
+
+        .fire-streak {
+            display: inline-block;
+            margin-left: 0.5rem;
+            animation: fire-wiggle 1s ease-in-out infinite;
+        }
+
+        @keyframes fire-wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .achievements {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .achievement-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .achievement-badge.earned {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: badge-pop 0.5s ease-out;
+        }
+
+        @keyframes badge-pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .achievement-badge:hover .tooltip {
+            opacity: 1;
         }
 
         .nav-buttons {
@@ -157,35 +420,59 @@
 
         .btn {
             flex: 1;
-            padding: 0.75rem 1.5rem;
-            background-color: #006594;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 12px;
             text-align: center;
-            font-weight: 500;
-            transition: background-color 0.2s;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn:hover {
-            background-color: #004d70;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
         }
 
         .btn-secondary {
-            background-color: white;
-            color: #006594;
-            border: 2px solid #006594;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
         }
 
         .btn-secondary:hover {
-            background-color: #f0f8ff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
         .footer {
             margin-top: 3rem;
             padding: 2rem 1rem;
-            background-color: #333;
-            color: #ccc;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            color: white;
             text-align: center;
             font-size: 0.875rem;
         }
@@ -204,28 +491,56 @@
             border-radius: 50%;
             margin-left: 0.5rem;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(76,175,80,0.5);
         }
 
         @keyframes pulse {
             0% {
                 opacity: 1;
+                transform: scale(1);
             }
             50% {
-                opacity: 0.5;
+                opacity: 0.7;
+                transform: scale(1.1);
             }
             100% {
                 opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
             }
         }
 
         @media (max-width: 600px) {
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 1.5rem;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .leaderboard-header,
             .ward-row {
-                grid-template-columns: 40px 1fr auto;
+                grid-template-columns: 50px 1fr auto;
             }
 
             .leaderboard-header .points-label:last-child,
@@ -238,32 +553,62 @@
             }
 
             .points-verified {
-                font-size: 1.125rem;
+                font-size: 1.25rem;
             }
 
             .rank {
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
                 font-size: 1rem;
+            }
+
+            .progress-bar {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <h1>Temple Points Tracker <span class="update-indicator" title="Real-time updates"></span></h1>
+        <div class="header-content">
+            <h1>Temple Points Challenge 🏆 <span class="update-indicator" title="Live updates"></span></h1>
+            <div class="goal-banner">
+                <span>🎯 Race to 1300 Points!</span>
+            </div>
+        </div>
     </header>
 
     <div class="container">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-label">Leading Ward</div>
+                <div class="stat-value">Moroni 1st</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-label">Total Points</div>
+                <div class="stat-value">4,135</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-label">Days Active</div>
+                <div class="stat-value">12</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-label">Participants</div>
+                <div class="stat-value">247</div>
+            </div>
+        </div>
+
         <div class="sort-controls">
-            <label for="sort-select">Sort by:</label>
+            <label for="sort-select">Sort Rankings:</label>
             <select id="sort-select">
-                <option value="verified-desc">Verified Points (High to Low)</option>
-                <option value="verified-asc">Verified Points (Low to High)</option>
-                <option value="total-desc">Total Points (High to Low)</option>
-                <option value="total-asc">Total Points (Low to High)</option>
-                <option value="ward-asc">Ward Name (A to Z)</option>
-                <option value="ward-desc">Ward Name (Z to A)</option>
+                <option value="verified-desc">🏅 Most Points</option>
+                <option value="verified-asc">📈 Least Points</option>
+                <option value="total-desc">💫 Total w/ Pending</option>
+                <option value="ward-asc">📖 Ward Name A-Z</option>
             </select>
         </div>
 
@@ -271,15 +616,33 @@
             <div class="leaderboard-header">
                 <div>Rank</div>
                 <div>Ward</div>
-                <div class="points-label">Verified</div>
+                <div class="points-label">Score</div>
                 <div class="points-label">Total</div>
             </div>
 
-            <div class="ward-row">
+            <div class="ward-row leader">
                 <div class="rank rank-1">1</div>
-                <div class="ward-name">Moroni 1st Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Moroni 1st Ward <span class="fire-streak">🔥</span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%"></div>
+                    </div>
+                    <div class="progress-label">847 / 1300 points (65%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge earned" title="First to 500">⚡
+                            <span class="tooltip">First to 500!</span>
+                        </div>
+                        <div class="achievement-badge earned" title="Week Champion">🏆
+                            <span class="tooltip">Week Champion</span>
+                        </div>
+                        <div class="achievement-badge earned" title="On Fire!">🔥
+                            <span class="tooltip">3 Day Streak!</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">847</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">897 <span class="points-pending">(+50)</span></div>
@@ -288,9 +651,24 @@
 
             <div class="ward-row">
                 <div class="rank rank-2">2</div>
-                <div class="ward-name">Fountain Green 2nd Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Fountain Green 2nd Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 59%"></div>
+                    </div>
+                    <div class="progress-label">765 / 1300 points (59%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge earned" title="Rising Star">✨
+                            <span class="tooltip">Rising Star</span>
+                        </div>
+                        <div class="achievement-badge earned" title="Team Player">🤝
+                            <span class="tooltip">Team Player</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">765</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">820 <span class="points-pending">(+55)</span></div>
@@ -299,9 +677,21 @@
 
             <div class="ward-row">
                 <div class="rank rank-3">3</div>
-                <div class="ward-name">Sanpitch Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Sanpitch Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 53%"></div>
+                    </div>
+                    <div class="progress-label">692 / 1300 points (53%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge earned" title="Consistent">📊
+                            <span class="tooltip">Consistent</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">692</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">692</div>
@@ -310,9 +700,21 @@
 
             <div class="ward-row">
                 <div class="rank rank-other">4</div>
-                <div class="ward-name">Moroni 3rd Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Moroni 3rd Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 42%"></div>
+                    </div>
+                    <div class="progress-label">543 / 1300 points (42%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge earned" title="Getting Started">🌟
+                            <span class="tooltip">Getting Started</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">543</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">578 <span class="points-pending">(+35)</span></div>
@@ -321,9 +723,21 @@
 
             <div class="ward-row">
                 <div class="rank rank-other">5</div>
-                <div class="ward-name">Fountain Green 1st Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Fountain Green 1st Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 38%"></div>
+                    </div>
+                    <div class="progress-label">489 / 1300 points (38%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge" title="Next: 500 points">🎯
+                            <span class="tooltip">Next: 500 points</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">489</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">514 <span class="points-pending">(+25)</span></div>
@@ -332,9 +746,21 @@
 
             <div class="ward-row">
                 <div class="rank rank-other">6</div>
-                <div class="ward-name">Moroni 2nd Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Moroni 2nd Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 32%"></div>
+                    </div>
+                    <div class="progress-label">412 / 1300 points (32%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge" title="Keep going!">💪
+                            <span class="tooltip">Keep going!</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">412</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">412</div>
@@ -343,9 +769,21 @@
 
             <div class="ward-row">
                 <div class="rank rank-other">7</div>
-                <div class="ward-name">Fountain Green 3rd Ward</div>
+                <div class="ward-info">
+                    <div class="ward-name">Fountain Green 3rd Ward</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 30%"></div>
+                    </div>
+                    <div class="progress-label">387 / 1300 points (30%)</div>
+                    <div class="achievements">
+                        <div class="achievement-badge earned" title="Momentum">🚀
+                            <span class="tooltip">Building Momentum!</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="points">
                     <div class="points-verified">387</div>
+                    <div class="points-label-small">Points</div>
                 </div>
                 <div class="points">
                     <div class="points-total">442 <span class="points-pending">(+55)</span></div>
@@ -354,8 +792,8 @@
         </div>
 
         <div class="nav-buttons">
-            <a href="/submit-points" class="btn">Submit Points</a>
-            <a href="/login" class="btn btn-secondary">Ward Admin Login</a>
+            <a href="/submit-points" class="btn">🎯 Add Your Points!</a>
+            <a href="/login" class="btn btn-secondary">👤 Ward Leader Login</a>
         </div>
     </div>
 
@@ -364,6 +802,24 @@
     </footer>
 
     <script>
+        // Confetti celebration effect
+        function createConfetti() {
+            const colors = ['#ffd700', '#667eea', '#764ba2', '#4caf50', '#ff6b6b'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 5000);
+                }, i * 30);
+            }
+        }
+
         // WebSocket connection for real-time updates
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -374,6 +830,12 @@
                 if (data.type === 'points-update') {
                     // Update the leaderboard with new data
                     updateLeaderboard(data.wards);
+                    
+                    // Celebrate if someone reached a milestone
+                    if (data.milestone) {
+                        createConfetti();
+                        showNotification(`🎉 ${data.milestone}`);
+                    }
                 }
             };
 
@@ -387,21 +849,146 @@
             };
         }
 
-        // Sort functionality
+        // Show achievement notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideIn 0.5s ease-out;
+                font-weight: 600;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
+        // Add slide animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(400px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Sort functionality with animation
         document.getElementById('sort-select').addEventListener('change', function(e) {
             const sortType = e.target.value;
-            // This will be implemented when connected to the backend
-            console.log('Sorting by:', sortType);
+            const leaderboard = document.querySelector('.leaderboard');
+            const rows = Array.from(document.querySelectorAll('.ward-row'));
+            
+            // Add animation class
+            rows.forEach(row => {
+                row.style.transition = 'all 0.5s ease-out';
+                row.style.opacity = '0';
+            });
+            
+            setTimeout(() => {
+                // Sort logic will be implemented when connected to backend
+                console.log('Sorting by:', sortType);
+                
+                // Restore opacity
+                rows.forEach((row, index) => {
+                    setTimeout(() => {
+                        row.style.opacity = '1';
+                    }, index * 50);
+                });
+            }, 300);
+        });
+
+        // Interactive achievement badges
+        document.querySelectorAll('.achievement-badge').forEach(badge => {
+            badge.addEventListener('click', function() {
+                if (this.classList.contains('earned')) {
+                    this.style.animation = 'badge-pop 0.5s ease-out';
+                    setTimeout(() => {
+                        this.style.animation = '';
+                    }, 500);
+                }
+            });
+        });
+
+        // Progress bar animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const progressFill = entry.target.querySelector('.progress-fill');
+                    if (progressFill) {
+                        const width = progressFill.style.width;
+                        progressFill.style.width = '0';
+                        setTimeout(() => {
+                            progressFill.style.width = width;
+                        }, 100);
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all ward rows
+        document.querySelectorAll('.ward-row').forEach(row => {
+            observer.observe(row);
+        });
+
+        // Fun hover effects for stat cards
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.stat-icon');
+                icon.style.transform = 'scale(1.2) rotate(10deg)';
+                icon.style.transition = 'transform 0.3s ease';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.stat-icon');
+                icon.style.transform = 'scale(1) rotate(0deg)';
+            });
         });
 
         // Initialize WebSocket connection when page loads
         document.addEventListener('DOMContentLoaded', function() {
             // connectWebSocket(); // Uncomment when backend is ready
+            
+            // Animate stats on load
+            document.querySelectorAll('.stat-value').forEach((stat, index) => {
+                setTimeout(() => {
+                    stat.style.animation = 'bounce 0.5s ease-out';
+                }, index * 100);
+            });
+            
+            // Show welcome message for new visitors
+            if (!localStorage.getItem('visited')) {
+                setTimeout(() => {
+                    showNotification('🎯 Welcome to the Temple Points Challenge!');
+                    localStorage.setItem('visited', 'true');
+                }, 1000);
+            }
         });
 
         function updateLeaderboard(wards) {
             // This function will update the DOM with new ward data
             // Implementation will be added when backend is ready
+            // Will include animations for rank changes
         }
     </script>
 </body>

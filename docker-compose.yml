@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: templepoints
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - DATABASE_PATH=/app/data/templepoints.db
+    volumes:
+      - ./data:/app/data
+    networks:
+      - templepoints-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.templepoints.rule=Host(`templepoints.local`)"
+      - "traefik.http.services.templepoints.loadbalancer.server.port=8080"
+
+  caddy:
+    image: caddy:alpine
+    container_name: templepoints-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - templepoints-network
+    depends_on:
+      - app
+
+networks:
+  templepoints-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

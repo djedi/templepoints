@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Temple Points</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #006594 0%, #0084c7 100%);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .badge {
+            background: #f5a623;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .pending-submissions {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .submission-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .submission-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .submission-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .submission-points {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .submission-details {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .submission-note {
+            background: #f5f5f5;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #555;
+            margin: 0.5rem 0;
+        }
+
+        .submission-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-approve, .btn-reject {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .btn-reject {
+            background: white;
+            color: #f44336;
+            border: 2px solid #f44336;
+        }
+
+        .btn-reject:hover {
+            background: #f44336;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .submission-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🛡️ Admin Dashboard</h1>
+            <div class="user-info">
+                <span id="userEmail">Loading...</span>
+                <button class="logout-btn" onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="todayPoints">0</div>
+                <div class="stat-label">Points Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalApproved">0</div>
+                <div class="stat-label">Total Approved</div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="pending">Pending Approvals</button>
+            <button class="nav-tab" data-tab="approved">Recently Approved</button>
+            <button class="nav-tab" data-tab="rejected">Recently Rejected</button>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Pending Submissions</h2>
+                    <span class="badge" id="pendingBadge">0 pending</span>
+                </div>
+                
+                <div id="pendingSubmissions" class="pending-submissions">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No pending submissions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let submissions = [];
+
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                currentUser = await response.json();
+                document.getElementById('userEmail').textContent = currentUser.email;
+                
+                loadSubmissions();
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/submissions?status=pending', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to load submissions');
+                
+                submissions = await response.json();
+                renderSubmissions();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+            }
+        }
+
+        function renderSubmissions() {
+            const container = document.getElementById('pendingSubmissions');
+            const badge = document.getElementById('pendingBadge');
+            
+            if (submissions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <p>All caught up! No pending submissions.</p>
+                    </div>
+                `;
+                badge.textContent = '0 pending';
+                return;
+            }
+            
+            badge.textContent = `${submissions.length} pending`;
+            
+            container.innerHTML = submissions.map(sub => `
+                <div class="submission-item" data-id="${sub.id}">
+                    <div class="submission-header">
+                        <div>
+                            <div class="submission-name">${sub.submitter_name}</div>
+                            <div class="submission-details">${sub.ward_name} • ${formatDate(sub.created_at)}</div>
+                        </div>
+                        <div class="submission-points">${sub.points} pts</div>
+                    </div>
+                    ${sub.note ? `<div class="submission-note">📝 ${sub.note}</div>` : ''}
+                    <div class="submission-actions">
+                        <button class="btn-approve" onclick="approveSubmission(${sub.id})">
+                            ✓ Approve
+                        </button>
+                        <button class="btn-reject" onclick="rejectSubmission(${sub.id})">
+                            ✗ Reject
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function approveSubmission(id) {
+            try {
+                const response = await fetch(`/api/points/${id}/approve`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    showNotification('Points approved successfully!', 'success');
+                    loadSubmissions();
+                } else {
+                    showNotification('Failed to approve points', 'error');
+                }
+            } catch (error) {
+                showNotification('Error approving points', 'error');
+            }
+        }
+
+        async function rejectSubmission(id) {
+            if (!confirm('Are you sure you want to reject these points?')) return;
+            
+            try {
+                const response = await fetch(`/api/points/${id}/reject`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    showNotification('Points rejected', 'info');
+                    loadSubmissions();
+                } else {
+                    showNotification('Failed to reject points', 'error');
+                }
+            } catch (error) {
+                showNotification('Error rejecting points', 'error');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('pendingCount').textContent = submissions.length;
+            // Additional stats would be loaded from API
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = (now - date) / 1000 / 60; // minutes
+            
+            if (diff < 60) return `${Math.floor(diff)} minutes ago`;
+            if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
+            return date.toLocaleDateString();
+        }
+
+        function showNotification(message, type) {
+            // Simple notification (could be enhanced)
+            alert(message);
+        }
+
+        async function logout() {
+            await fetch('/api/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            window.location.href = '/';
+        }
+
+        // Tab switching
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                // Load appropriate data based on tab
+                const tabType = this.dataset.tab;
+                // Implementation would load different data based on tab
+            });
+        });
+
+        // Initialize
+        checkAuth();
+        
+        // Refresh data every 30 seconds
+        setInterval(loadSubmissions, 30000);
+    </script>
+</body>
+</html>
