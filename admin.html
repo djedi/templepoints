@@ -58,6 +58,21 @@
             background: rgba(255,255,255,0.3);
         }
 
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         .container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -268,6 +283,7 @@
         <div class="header-content">
             <h1>🛡️ Admin Dashboard</h1>
             <div class="user-info">
+                <a href="/" class="back-btn">← Back to Leaderboard</a>
                 <span id="userEmail">Loading...</span>
                 <button class="logout-btn" onclick="logout()">Sign Out</button>
             </div>

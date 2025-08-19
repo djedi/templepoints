@@ -108,6 +108,7 @@ func (s *Server) setupRoutes() {
 	api.HandleFunc("/points/{id}/approve", s.handleApprovePoints).Methods("POST")
 	api.HandleFunc("/points/{id}/reject", s.handleRejectPoints).Methods("POST")
 	api.HandleFunc("/leaderboard", s.handleGetLeaderboard).Methods("GET")
+	api.HandleFunc("/auth/status", s.handleAuthStatus).Methods("GET")
 	api.HandleFunc("/login", s.handleLogin).Methods("POST")
 	api.HandleFunc("/logout", s.handleLogout).Methods("POST")
 	api.HandleFunc("/user", s.handleGetUser).Methods("GET")

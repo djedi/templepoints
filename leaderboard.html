@@ -636,7 +636,7 @@
             </div>
         </div>
 
-        <div class="nav-buttons">
+        <div class="nav-buttons" id="nav-buttons">
             <a href="/submit-points" class="btn">🎯 Add Your Points!</a>
             <a href="/login" class="btn btn-secondary">👤 Ward Leader Login</a>
         </div>
@@ -825,8 +825,62 @@
             });
         });
 
+        // Check authentication status and update navigation buttons
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/auth/status');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateNavButtons(data.isLoggedIn, data.userRole);
+                }
+            } catch (error) {
+                console.error('Error checking auth status:', error);
+            }
+        }
+
+        // Update navigation buttons based on auth status
+        function updateNavButtons(isLoggedIn, userRole) {
+            const navButtons = document.getElementById('nav-buttons');
+            
+            if (isLoggedIn) {
+                // User is logged in - show Admin and Logout buttons
+                navButtons.innerHTML = `
+                    <a href="/submit-points" class="btn">🎯 Add Your Points!</a>
+                    <a href="/admin" class="btn btn-secondary">⚙️ Admin</a>
+                    <a href="#" onclick="logout(); return false;" class="btn btn-secondary">🚪 Log Out</a>
+                `;
+            } else {
+                // User is not logged in - show login button
+                navButtons.innerHTML = `
+                    <a href="/submit-points" class="btn">🎯 Add Your Points!</a>
+                    <a href="/login" class="btn btn-secondary">👤 Ward Leader Login</a>
+                `;
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    // Refresh the page after logout
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Error during logout:', error);
+                showNotification('❌ Failed to log out');
+            }
+        }
+
         // Initialize WebSocket connection when page loads
         document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication status
+            checkAuthStatus();
+            
             // Load initial data
             loadLeaderboard();
 

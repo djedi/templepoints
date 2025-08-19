@@ -609,6 +609,29 @@ func (s *Server) handleGetSubmissions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(submissions)
 }
 
+// Auth status endpoint
+func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
+	userID := s.getUserIDFromSession(r)
+	
+	response := struct {
+		IsLoggedIn bool   `json:"isLoggedIn"`
+		UserRole   string `json:"userRole,omitempty"`
+	}{
+		IsLoggedIn: userID > 0,
+	}
+	
+	if userID > 0 {
+		var role string
+		err := s.db.QueryRow(`SELECT role FROM users WHERE id = ?`, userID).Scan(&role)
+		if err == nil {
+			response.UserRole = role
+		}
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 // Helper functions
 
 func (s *Server) getUserIDFromSession(r *http.Request) int {
