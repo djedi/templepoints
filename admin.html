@@ -343,6 +343,58 @@
             display: none;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            font-weight: 500;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .notification.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -388,11 +440,11 @@
             </div>
         </div>
 
-        <div class="nav-tabs">
+        <div class="nav-tabs" id="nav-tabs">
             <button class="nav-tab active" data-tab="pending">Pending Approvals</button>
             <button class="nav-tab" data-tab="approved">Recently Approved</button>
             <button class="nav-tab" data-tab="rejected">Recently Rejected</button>
-            <button class="nav-tab" data-tab="create-approver">Create Ward Approver</button>
+            <button class="nav-tab" data-tab="create-approver" id="create-approver-tab" style="display: none;">Create Ward Approver</button>
         </div>
 
         <div class="dashboard-grid">
@@ -453,6 +505,7 @@
     <script>
         let currentUser = null;
         let submissions = [];
+        let ws = null;
 
         async function checkAuth() {
             try {
@@ -468,10 +521,46 @@
                 currentUser = await response.json();
                 document.getElementById('userEmail').textContent = currentUser.email;
                 
+                // Show Create Ward Approver tab only for admin users
+                if (currentUser.role === 'admin') {
+                    document.getElementById('create-approver-tab').style.display = 'block';
+                }
+                
                 loadSubmissions();
+                connectWebSocket();
             } catch (error) {
                 window.location.href = '/login';
             }
+        }
+
+        // WebSocket connection for real-time updates
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+            };
+
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                
+                if (message.type === 'submission-update' || message.type === 'leaderboard-update') {
+                    // Reload submissions when there's an update
+                    loadSubmissions();
+                    showNotification('New submission received!', 'info');
+                }
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = function() {
+                console.log('WebSocket disconnected, attempting to reconnect...');
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
         }
 
         async function loadSubmissions() {
@@ -582,9 +671,16 @@
             return date.toLocaleDateString();
         }
 
-        function showNotification(message, type) {
-            // Simple notification (could be enhanced)
-            alert(message);
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
 
         async function logout() {
@@ -712,8 +808,7 @@
         // Initialize
         checkAuth();
         
-        // Refresh data every 30 seconds
-        setInterval(loadSubmissions, 30000);
+        // No need for interval refresh - WebSocket handles real-time updates
     </script>
 </body>
 </html>
