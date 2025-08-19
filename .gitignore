@@ -1,2 +1,4 @@
-templepoints.db.backup.*
+.DS_Store
 dev.log
+templepoints.db
+templepoints.db.backup.*
