@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temple Points Tracker - Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: #006594;
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .sort-controls {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .sort-controls label {
+            display: block;
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .sort-controls select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: white;
+        }
+
+        .leaderboard {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .leaderboard-header {
+            background-color: #f8f8f8;
+            padding: 1rem;
+            border-bottom: 2px solid #006594;
+            display: grid;
+            grid-template-columns: 50px 1fr auto auto;
+            gap: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .ward-row {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: grid;
+            grid-template-columns: 50px 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .ward-row:hover {
+            background-color: #f8f8f8;
+        }
+
+        .rank {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .rank-1 {
+            background-color: #ffd700;
+            color: #333;
+        }
+
+        .rank-2 {
+            background-color: #c0c0c0;
+            color: #333;
+        }
+
+        .rank-3 {
+            background-color: #cd7f32;
+            color: white;
+        }
+
+        .rank-other {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+
+        .ward-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .points {
+            text-align: right;
+        }
+
+        .points-verified {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #006594;
+        }
+
+        .points-total {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .points-pending {
+            color: #f5a623;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            background-color: #006594;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #004d70;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: #006594;
+            border: 2px solid #006594;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0f8ff;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding: 2rem 1rem;
+            background-color: #333;
+            color: #ccc;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .footer p {
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .update-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .leaderboard-header,
+            .ward-row {
+                grid-template-columns: 40px 1fr auto;
+            }
+
+            .leaderboard-header .points-label:last-child,
+            .ward-row .points-total {
+                display: none;
+            }
+
+            .ward-name {
+                font-size: 0.875rem;
+            }
+
+            .points-verified {
+                font-size: 1.125rem;
+            }
+
+            .rank {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Temple Points Tracker <span class="update-indicator" title="Real-time updates"></span></h1>
+    </header>
+
+    <div class="container">
+        <div class="sort-controls">
+            <label for="sort-select">Sort by:</label>
+            <select id="sort-select">
+                <option value="verified-desc">Verified Points (High to Low)</option>
+                <option value="verified-asc">Verified Points (Low to High)</option>
+                <option value="total-desc">Total Points (High to Low)</option>
+                <option value="total-asc">Total Points (Low to High)</option>
+                <option value="ward-asc">Ward Name (A to Z)</option>
+                <option value="ward-desc">Ward Name (Z to A)</option>
+            </select>
+        </div>
+
+        <div class="leaderboard">
+            <div class="leaderboard-header">
+                <div>Rank</div>
+                <div>Ward</div>
+                <div class="points-label">Verified</div>
+                <div class="points-label">Total</div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-1">1</div>
+                <div class="ward-name">Moroni 1st Ward</div>
+                <div class="points">
+                    <div class="points-verified">847</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">897 <span class="points-pending">(+50)</span></div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-2">2</div>
+                <div class="ward-name">Fountain Green 2nd Ward</div>
+                <div class="points">
+                    <div class="points-verified">765</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">820 <span class="points-pending">(+55)</span></div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-3">3</div>
+                <div class="ward-name">Sanpitch Ward</div>
+                <div class="points">
+                    <div class="points-verified">692</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">692</div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-other">4</div>
+                <div class="ward-name">Moroni 3rd Ward</div>
+                <div class="points">
+                    <div class="points-verified">543</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">578 <span class="points-pending">(+35)</span></div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-other">5</div>
+                <div class="ward-name">Fountain Green 1st Ward</div>
+                <div class="points">
+                    <div class="points-verified">489</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">514 <span class="points-pending">(+25)</span></div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-other">6</div>
+                <div class="ward-name">Moroni 2nd Ward</div>
+                <div class="points">
+                    <div class="points-verified">412</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">412</div>
+                </div>
+            </div>
+
+            <div class="ward-row">
+                <div class="rank rank-other">7</div>
+                <div class="ward-name">Fountain Green 3rd Ward</div>
+                <div class="points">
+                    <div class="points-verified">387</div>
+                </div>
+                <div class="points">
+                    <div class="points-total">442 <span class="points-pending">(+55)</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/submit-points" class="btn">Submit Points</a>
+            <a href="/login" class="btn btn-secondary">Ward Admin Login</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>This website is not affiliated with, endorsed by, or sponsored by The Church of Jesus Christ of Latter-day Saints. All content and functionality are independently created and maintained.</p>
+    </footer>
+
+    <script>
+        // WebSocket connection for real-time updates
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'points-update') {
+                    // Update the leaderboard with new data
+                    updateLeaderboard(data.wards);
+                }
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = function() {
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Sort functionality
+        document.getElementById('sort-select').addEventListener('change', function(e) {
+            const sortType = e.target.value;
+            // This will be implemented when connected to the backend
+            console.log('Sorting by:', sortType);
+        });
+
+        // Initialize WebSocket connection when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // connectWebSocket(); // Uncomment when backend is ready
+        });
+
+        function updateLeaderboard(wards) {
+            // This function will update the DOM with new ward data
+            // Implementation will be added when backend is ready
+        }
+    </script>
+</body>
+</html>
