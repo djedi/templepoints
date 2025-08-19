@@ -114,6 +114,8 @@ func (s *Server) setupRoutes() {
 	api.HandleFunc("/user", s.handleGetUser).Methods("GET")
 	api.HandleFunc("/submissions", s.handleGetSubmissions).Methods("GET")
 	api.HandleFunc("/ward/{id}/log", s.handleGetWardLog).Methods("GET")
+	api.HandleFunc("/wards", s.handleGetWards).Methods("GET")
+	api.HandleFunc("/create-ward-approver", s.handleCreateWardApprover).Methods("POST")
 	
 	// WebSocket endpoint
 	s.router.HandleFunc("/ws", s.handleWebSocket)

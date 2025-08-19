@@ -261,6 +261,88 @@
             border-bottom-color: #667eea;
         }
 
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            transition: border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -310,6 +392,7 @@
             <button class="nav-tab active" data-tab="pending">Pending Approvals</button>
             <button class="nav-tab" data-tab="approved">Recently Approved</button>
             <button class="nav-tab" data-tab="rejected">Recently Rejected</button>
+            <button class="nav-tab" data-tab="create-approver">Create Ward Approver</button>
         </div>
 
         <div class="dashboard-grid">
@@ -325,6 +408,44 @@
                         <p>No pending submissions</p>
                     </div>
                 </div>
+            </div>
+
+            <div class="card" id="create-approver-section" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">Create Ward Approver Account</h2>
+                </div>
+                
+                <div id="success-message" class="success-message"></div>
+                <div id="error-message" class="error-message"></div>
+                
+                <form id="create-approver-form">
+                    <div class="form-group">
+                        <label class="form-label" for="ward-select">Select Ward</label>
+                        <select class="form-select" id="ward-select" name="ward_id" required>
+                            <option value="">Choose a ward...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="email-input">Email Address</label>
+                        <input type="email" class="form-input" id="email-input" name="email" 
+                               placeholder="wardleader@example.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password-input">Password</label>
+                        <input type="password" class="form-input" id="password-input" name="password" 
+                               placeholder="Enter a secure password" required minlength="8">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password-input">Confirm Password</label>
+                        <input type="password" class="form-input" id="confirm-password-input" 
+                               placeholder="Re-enter password" required minlength="8">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Create Ward Approver Account</button>
+                </form>
             </div>
         </div>
     </div>
@@ -474,14 +595,117 @@
             window.location.href = '/';
         }
 
+        // Load wards for dropdown
+        async function loadWards() {
+            try {
+                const response = await fetch('/api/wards', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) throw new Error('Failed to load wards');
+                
+                const wards = await response.json();
+                const wardSelect = document.getElementById('ward-select');
+                
+                wardSelect.innerHTML = '<option value="">Choose a ward...</option>';
+                wards.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.id;
+                    option.textContent = ward.name;
+                    wardSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading wards:', error);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('create-approver-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password-input').value;
+            const confirmPassword = document.getElementById('confirm-password-input').value;
+            
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+            
+            const formData = {
+                email: document.getElementById('email-input').value,
+                password: password,
+                ward_id: parseInt(document.getElementById('ward-select').value)
+            };
+            
+            try {
+                const response = await fetch('/api/create-ward-approver', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showSuccess(`Ward approver created successfully for ${result.ward_name}!`);
+                    document.getElementById('create-approver-form').reset();
+                } else {
+                    const errorText = await response.text();
+                    showError(errorText || 'Failed to create ward approver');
+                }
+            } catch (error) {
+                showError('Error creating ward approver: ' + error.message);
+            }
+        });
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
         // Tab switching
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
-                // Load appropriate data based on tab
+                
                 const tabType = this.dataset.tab;
-                // Implementation would load different data based on tab
+                
+                // Hide all sections
+                document.querySelector('.card:has(#pendingSubmissions)').style.display = 'none';
+                document.getElementById('create-approver-section').style.display = 'none';
+                
+                // Show appropriate section
+                if (tabType === 'create-approver') {
+                    document.getElementById('create-approver-section').style.display = 'block';
+                    loadWards(); // Load wards when tab is opened
+                } else {
+                    document.querySelector('.card:has(#pendingSubmissions)').style.display = 'block';
+                    // Load appropriate data based on tab
+                    if (tabType === 'pending') {
+                        loadSubmissions();
+                    }
+                    // Implementation would load different data based on other tabs
+                }
             });
         });
 

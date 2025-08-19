@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -630,6 +631,108 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 	
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+// Create ward approver endpoint (admin only)
+func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request) {
+	// Check if user is admin
+	userID := s.getUserIDFromSession(r)
+	if userID == 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	var userRole string
+	err := s.db.QueryRow(`SELECT role FROM users WHERE id = ?`, userID).Scan(&userRole)
+	if err != nil || userRole != "admin" {
+		http.Error(w, "Forbidden - Admin access required", http.StatusForbidden)
+		return
+	}
+	
+	// Parse request body
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		WardID   int    `json:"ward_id"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	// Validate input
+	if req.Email == "" || req.Password == "" || req.WardID == 0 {
+		http.Error(w, "Email, password, and ward are required", http.StatusBadRequest)
+		return
+	}
+	
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Error processing password", http.StatusInternalServerError)
+		return
+	}
+	
+	// Create user
+	result, err := s.db.Exec(`
+		INSERT INTO users (email, password, role, ward_id) 
+		VALUES (?, ?, 'ward_approver', ?)
+	`, req.Email, string(hashedPassword), req.WardID)
+	
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
+			http.Error(w, "Email already exists", http.StatusConflict)
+		} else {
+			log.Printf("Error creating ward approver: %v", err)
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		}
+		return
+	}
+	
+	newUserID, _ := result.LastInsertId()
+	
+	// Get ward name for response
+	var wardName string
+	s.db.QueryRow(`SELECT name FROM wards WHERE id = ?`, req.WardID).Scan(&wardName)
+	
+	// Log the activity
+	s.logActivity(req.WardID, &userID, "ward_approver_created", fmt.Sprintf("Created ward approver: %s", req.Email), 0)
+	
+	// Send success response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"user_id": newUserID,
+		"email": req.Email,
+		"ward_name": wardName,
+	})
+}
+
+// Get list of wards for dropdown
+func (s *Server) handleGetWards(w http.ResponseWriter, r *http.Request) {
+	rows, err := s.db.Query(`SELECT id, name FROM wards ORDER BY name`)
+	if err != nil {
+		http.Error(w, "Failed to get wards", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+	
+	var wards []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			continue
+		}
+		wards = append(wards, map[string]interface{}{
+			"id": id,
+			"name": name,
+		})
+	}
+	
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(wards)
 }
 
 // Helper functions
