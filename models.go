@@ -5,11 +5,11 @@ import (
 )
 
 type Ward struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
-	Points       int       `json:"points"`
-	PendingPoints int      `json:"pending_points"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID            int       `json:"id"`
+	Name          string    `json:"name"`
+	Points        int       `json:"points"`
+	PendingPoints int       `json:"pending_points"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type User struct {
@@ -22,16 +22,16 @@ type User struct {
 }
 
 type PointSubmission struct {
-	ID           int       `json:"id"`
-	WardID       int       `json:"ward_id"`
-	WardName     string    `json:"ward_name,omitempty"`
-	SubmitterName string   `json:"submitter_name"`
-	Points       int       `json:"points"`
-	Note         string    `json:"note"`
-	Status       string    `json:"status"` // "pending", "approved", "rejected"
-	ApprovedBy   *int      `json:"approved_by,omitempty"`
-	ApprovedAt   *time.Time `json:"approved_at,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID            int        `json:"id"`
+	WardID        int        `json:"ward_id"`
+	WardName      string     `json:"ward_name,omitempty"`
+	SubmitterName string     `json:"submitter_name"`
+	Points        int        `json:"points"`
+	Note          string     `json:"note"`
+	Status        string     `json:"status"` // "pending", "approved", "rejected"
+	ApprovedBy    *int       `json:"approved_by,omitempty"`
+	ApprovedAt    *time.Time `json:"approved_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
 }
 
 type LeaderboardEntry struct {
@@ -41,17 +41,17 @@ type LeaderboardEntry struct {
 	Points        int       `json:"points"`
 	PendingPoints int       `json:"pending_points"`
 	TotalPoints   int       `json:"total_points"`
-	Progress      float64   `json:"progress"` // percentage to 1300
+	Progress      float64   `json:"progress"` // percentage to 1360
 	Achievements  []string  `json:"achievements"`
 	Streak        int       `json:"streak"`
 	LastActivity  time.Time `json:"last_activity"`
 }
 
 type Stats struct {
-	LeadingWard   string `json:"leading_ward"`
-	TotalPoints   int    `json:"total_points"`
-	DaysActive    int    `json:"days_active"`
-	Participants  int    `json:"participants"`
+	LeadingWard  string `json:"leading_ward"`
+	TotalPoints  int    `json:"total_points"`
+	DaysActive   int    `json:"days_active"`
+	Participants int    `json:"participants"`
 }
 
 type Achievement struct {

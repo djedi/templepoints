@@ -44,13 +44,13 @@ func (s *Server) handleGetLeaderboard(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) getLeaderboardEntries(sortBy string) ([]LeaderboardEntry, error) {
 	query := `
-		SELECT 
+		SELECT
 			w.id,
 			w.name,
 			w.points,
 			w.pending_points,
 			w.points + w.pending_points as total_points,
-			ROUND(CAST(w.points AS FLOAT) / 1300 * 100, 1) as progress
+			ROUND(CAST(w.points AS FLOAT) / 1360 * 100, 1) as progress
 		FROM wards w
 	`
 
@@ -137,7 +137,7 @@ func (s *Server) calculateStreak(wardID int) int {
 	query := `
 		SELECT COUNT(DISTINCT DATE(created_at)) as streak
 		FROM activity_logs
-		WHERE ward_id = ? 
+		WHERE ward_id = ?
 		AND created_at >= datetime('now', '-7 days')
 	`
 	s.db.QueryRow(query, wardID).Scan(&streak)
@@ -176,7 +176,7 @@ func (s *Server) getStats() (*Stats, error) {
 	err = s.db.QueryRow(`
 		SELECT COUNT(DISTINCT submitter_name) FROM point_submissions
 	`).Scan(&stats.Participants)
-	
+
 	return stats, nil
 }
 
@@ -215,10 +215,10 @@ func (s *Server) handleSubmitPoints(w http.ResponseWriter, r *http.Request) {
 
 	// Update pending points for the ward
 	_, err = s.db.Exec(`
-		UPDATE wards 
+		UPDATE wards
 		SET pending_points = (
-			SELECT COALESCE(SUM(points), 0) 
-			FROM point_submissions 
+			SELECT COALESCE(SUM(points), 0)
+			FROM point_submissions
 			WHERE ward_id = ? AND status = 'pending'
 		)
 		WHERE id = ?
@@ -229,8 +229,8 @@ func (s *Server) handleSubmitPoints(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log activity
-	s.logActivity(submission.WardID, nil, "points_submitted", 
-		fmt.Sprintf("%s submitted %d points", submission.SubmitterName, submission.Points), 
+	s.logActivity(submission.WardID, nil, "points_submitted",
+		fmt.Sprintf("%s submitted %d points", submission.SubmitterName, submission.Points),
 		submission.Points)
 
 	// Broadcast update to all connected clients
@@ -263,8 +263,8 @@ func (s *Server) handleApprovePoints(w http.ResponseWriter, r *http.Request) {
 	var wardID, points int
 	var submitterName string
 	err = s.db.QueryRow(`
-		SELECT ward_id, points, submitter_name 
-		FROM point_submissions 
+		SELECT ward_id, points, submitter_name
+		FROM point_submissions
 		WHERE id = ? AND status = 'pending'
 	`, submissionID).Scan(&wardID, &points, &submitterName)
 
@@ -285,7 +285,7 @@ func (s *Server) handleApprovePoints(w http.ResponseWriter, r *http.Request) {
 
 	// Approve the submission
 	_, err = s.db.Exec(`
-		UPDATE point_submissions 
+		UPDATE point_submissions
 		SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`, userID, submissionID)
@@ -297,7 +297,7 @@ func (s *Server) handleApprovePoints(w http.ResponseWriter, r *http.Request) {
 
 	// Update ward points
 	_, err = s.db.Exec(`
-		UPDATE wards 
+		UPDATE wards
 		SET points = points + ?,
 		    pending_points = pending_points - ?
 		WHERE id = ?
@@ -311,7 +311,7 @@ func (s *Server) handleApprovePoints(w http.ResponseWriter, r *http.Request) {
 	s.checkAndAwardAchievements(wardID)
 
 	// Log activity
-	s.logActivity(wardID, &userID, "points_approved", 
+	s.logActivity(wardID, &userID, "points_approved",
 		fmt.Sprintf("Approved %d points from %s", points, submitterName), points)
 
 	// Broadcast update
@@ -341,8 +341,8 @@ func (s *Server) handleRejectPoints(w http.ResponseWriter, r *http.Request) {
 	// Get submission details
 	var wardID, points int
 	err = s.db.QueryRow(`
-		SELECT ward_id, points 
-		FROM point_submissions 
+		SELECT ward_id, points
+		FROM point_submissions
 		WHERE id = ? AND status = 'pending'
 	`, submissionID).Scan(&wardID, &points)
 
@@ -359,7 +359,7 @@ func (s *Server) handleRejectPoints(w http.ResponseWriter, r *http.Request) {
 
 	// Reject the submission
 	_, err = s.db.Exec(`
-		UPDATE point_submissions 
+		UPDATE point_submissions
 		SET status = 'rejected', approved_by = ?, approved_at = CURRENT_TIMESTAMP
 		WHERE id = ?
 	`, userID, submissionID)
@@ -371,7 +371,7 @@ func (s *Server) handleRejectPoints(w http.ResponseWriter, r *http.Request) {
 
 	// Update pending points
 	_, err = s.db.Exec(`
-		UPDATE wards 
+		UPDATE wards
 		SET pending_points = pending_points - ?
 		WHERE id = ?
 	`, points, wardID)
@@ -400,8 +400,8 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	var user User
 	var hashedPassword string
 	err := s.db.QueryRow(`
-		SELECT id, email, password, role, ward_id 
-		FROM users 
+		SELECT id, email, password, role, ward_id
+		FROM users
 		WHERE email = ?
 	`, credentials.Email).Scan(&user.ID, &user.Email, &hashedPassword, &user.Role, &user.WardID)
 
@@ -457,8 +457,8 @@ func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	err := s.db.QueryRow(`
-		SELECT id, email, role, ward_id 
-		FROM users 
+		SELECT id, email, role, ward_id
+		FROM users
 		WHERE id = ?
 	`, userID).Scan(&user.ID, &user.Email, &user.Role, &user.WardID)
 
@@ -479,8 +479,8 @@ func (s *Server) handleGetWardLog(w http.ResponseWriter, r *http.Request) {
 	var wardName string
 	var totalPoints, pendingPoints int
 	err := s.db.QueryRow(`
-		SELECT name, points, pending_points 
-		FROM wards 
+		SELECT name, points, pending_points
+		FROM wards
 		WHERE id = ?
 	`, wardID).Scan(&wardName, &totalPoints, &pendingPoints)
 
@@ -508,7 +508,7 @@ func (s *Server) handleGetWardLog(w http.ResponseWriter, r *http.Request) {
 	var submissions []PointSubmission
 	for rows.Next() {
 		var sub PointSubmission
-		err := rows.Scan(&sub.ID, &sub.SubmitterName, &sub.Points, 
+		err := rows.Scan(&sub.ID, &sub.SubmitterName, &sub.Points,
 			&sub.Note, &sub.Status, &sub.CreatedAt)
 		if err != nil {
 			log.Printf("Error scanning submission: %v", err)
@@ -559,7 +559,7 @@ func (s *Server) handleGetSubmissions(w http.ResponseWriter, r *http.Request) {
 	if role == "admin" {
 		// Admin can see all submissions
 		query = `
-			SELECT ps.id, ps.ward_id, w.name, ps.submitter_name, ps.points, 
+			SELECT ps.id, ps.ward_id, w.name, ps.submitter_name, ps.points,
 			       ps.note, ps.status, ps.created_at
 			FROM point_submissions ps
 			JOIN wards w ON ps.ward_id = w.id
@@ -571,7 +571,7 @@ func (s *Server) handleGetSubmissions(w http.ResponseWriter, r *http.Request) {
 	} else if role == "ward_approver" && userWardID.Valid {
 		// Ward approver can only see their ward's submissions
 		query = `
-			SELECT ps.id, ps.ward_id, w.name, ps.submitter_name, ps.points, 
+			SELECT ps.id, ps.ward_id, w.name, ps.submitter_name, ps.points,
 			       ps.note, ps.status, ps.created_at
 			FROM point_submissions ps
 			JOIN wards w ON ps.ward_id = w.id
@@ -628,7 +628,7 @@ func (s *Server) getUserIDFromSession(r *http.Request) int {
 func (s *Server) canApproveForWard(userID, wardID int) bool {
 	var role string
 	var userWardID sql.NullInt64
-	
+
 	err := s.db.QueryRow(`
 		SELECT role, ward_id FROM users WHERE id = ?
 	`, userID).Scan(&role, &userWardID)
@@ -676,7 +676,7 @@ func (s *Server) checkAndAwardAchievements(wardID int) {
 		{points >= 100, "first_100", "First 100 Points!", "💯"},
 		{points >= 500, "first_500", "First to 500!", "⚡"},
 		{points >= 1000, "first_1000", "Thousand Club!", "🎯"},
-		{points >= 1300, "goal_reached", "Goal Achieved!", "🏆"},
+		{points >= 1360, "goal_reached", "Goal Achieved!", "🏆"},
 	}
 
 	for _, ach := range achievements {

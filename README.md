@@ -1,10 +1,10 @@
 # Temple Points Tracker 🏆
 
-A fun, gamified web application to help LDS youth stakes track temple ordinance points as wards race to 1300 points. Features real-time updates, achievements, and an engaging interface designed specifically for young men and young women.
+A fun, gamified web application to help LDS youth stakes track temple ordinance points as wards race to 1360 points. Features real-time updates, achievements, and an engaging interface designed specifically for young men and young women.
 
 ## 🎯 Overview
 
-This application was built for a stake competition where 7 wards compete to reach 1300 temple ordinance points. Youth submit their temple work points, ward leaders approve them, and everyone can watch the real-time leaderboard with fun animations and achievements.
+This application was built for a stake competition where 7 wards compete to reach 1360 temple ordinance points. Youth submit their temple work points, ward leaders approve them, and everyone can watch the real-time leaderboard with fun animations and achievements.
 
 ### Participating Wards
 

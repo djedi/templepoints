@@ -1,6 +1,6 @@
 # Temple Points Tracker
 
-Our stake is having a contest to see which ward can get the most 1300 points the fastest. You get points by doing ordinances in the temple mainly.
+Our stake is having a contest to see which ward can get to 1360 points the fastest. You get points by doing ordinances in the temple mainly.
 
 There are 7 wards:
 
