@@ -194,6 +194,8 @@
             width: 0;
             background: linear-gradient(90deg, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
             transition: width 0.3s;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .ward-row:hover::before {
@@ -267,12 +269,24 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         .ward-name {
             font-weight: 600;
             color: #333;
             font-size: 1rem;
+        }
+
+        .ward-name a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .ward-name a:hover {
+            color: #667eea;
         }
 
         .progress-bar {
@@ -322,6 +336,7 @@
         .points {
             text-align: center;
             position: relative;
+            z-index: 1;
         }
 
         .points-verified {
@@ -623,7 +638,7 @@
             <div class="ward-row leader">
                 <div class="rank rank-1">1</div>
                 <div class="ward-info">
-                    <div class="ward-name">Moroni 1st Ward <span class="fire-streak">🔥</span></div>
+                    <div class="ward-name"><a href="/ward-log?id=4">Moroni 1st Ward</a> <span class="fire-streak">🔥</span></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 65%"></div>
                     </div>
@@ -652,7 +667,7 @@
             <div class="ward-row">
                 <div class="rank rank-2">2</div>
                 <div class="ward-info">
-                    <div class="ward-name">Fountain Green 2nd Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=2">Fountain Green 2nd Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 59%"></div>
                     </div>
@@ -678,7 +693,7 @@
             <div class="ward-row">
                 <div class="rank rank-3">3</div>
                 <div class="ward-info">
-                    <div class="ward-name">Sanpitch Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=7">Sanpitch Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 53%"></div>
                     </div>
@@ -701,7 +716,7 @@
             <div class="ward-row">
                 <div class="rank rank-other">4</div>
                 <div class="ward-info">
-                    <div class="ward-name">Moroni 3rd Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=6">Moroni 3rd Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 42%"></div>
                     </div>
@@ -724,7 +739,7 @@
             <div class="ward-row">
                 <div class="rank rank-other">5</div>
                 <div class="ward-info">
-                    <div class="ward-name">Fountain Green 1st Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=1">Fountain Green 1st Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 38%"></div>
                     </div>
@@ -747,7 +762,7 @@
             <div class="ward-row">
                 <div class="rank rank-other">6</div>
                 <div class="ward-info">
-                    <div class="ward-name">Moroni 2nd Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=5">Moroni 2nd Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 32%"></div>
                     </div>
@@ -770,7 +785,7 @@
             <div class="ward-row">
                 <div class="rank rank-other">7</div>
                 <div class="ward-info">
-                    <div class="ward-name">Fountain Green 3rd Ward</div>
+                    <div class="ward-name"><a href="/ward-log?id=3">Fountain Green 3rd Ward</a></div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: 30%"></div>
                     </div>

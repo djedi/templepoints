@@ -20,6 +20,12 @@ I want to create a website that will have the following views:
 
 Show a leaderboard of each of the wards and their current number of points. It should show total verified points and total points + pending points. This is a public view. Anyone can see it and sort by ward, points, or points + pending. Default will be sorted by verified points descending.
 
+There should be a link for each ward's point audit log
+
+### Ward points log
+
+For each ward, show a log of all their points. Each log entry should include date/time submitted, name, note, and number of points, and wheter is has been approved.
+
 ### Point Input form
 
 Allow anyone to enter points. They would enter their name, ward, and number of points, and a note.

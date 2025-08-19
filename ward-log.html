@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ward Points Log - Temple Points Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #006594 0%, #0084c7 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.05) 10px,
+                rgba(255,255,255,0.05) 20px
+            );
+            animation: shimmer 20s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+        }
+
+        .ward-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ward-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .ward-stats {
+            display: flex;
+            gap: 2rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .filters {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .points-log {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .log-header {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 150px 1fr 100px 100px 120px;
+            gap: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-entry {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: grid;
+            grid-template-columns: 150px 1fr 100px 100px 120px;
+            gap: 1rem;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .log-entry:hover {
+            background-color: #f8f8f8;
+        }
+
+        .log-entry.pending {
+            background: linear-gradient(90deg, rgba(245,166,35,0.05) 0%, transparent 100%);
+        }
+
+        .log-entry.rejected {
+            background: linear-gradient(90deg, rgba(244,67,54,0.05) 0%, transparent 100%);
+            opacity: 0.7;
+        }
+
+        .entry-date {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        .entry-time {
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .entry-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .entry-note {
+            font-size: 0.875rem;
+            color: #666;
+            font-style: italic;
+        }
+
+        .entry-points {
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #45a049;
+        }
+
+        .btn-reject {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #da190b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .ward-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .ward-stats {
+                width: 100%;
+                justify-content: space-around;
+            }
+
+            .log-header,
+            .log-entry {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .log-header > *:not(:first-child) {
+                display: none;
+            }
+
+            .log-entry > * {
+                padding: 0.25rem 0;
+            }
+
+            .entry-points {
+                font-size: 1rem;
+            }
+
+            .mobile-label {
+                font-size: 0.75rem;
+                color: #999;
+                margin-right: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="back-link">
+                ← Back to Leaderboard
+            </a>
+            <div class="ward-header">
+                <h1 class="ward-title" id="wardName">Loading...</h1>
+                <div class="ward-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPoints">0</div>
+                        <div class="stat-label">Verified</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="pendingPoints">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalSubmissions">0</div>
+                        <div class="stat-label">Submissions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Status:</label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Submissions</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Sort by:</label>
+                <select class="filter-select" id="sortFilter">
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="points-desc">Most Points</option>
+                    <option value="points-asc">Least Points</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="points-log">
+            <div class="log-header">
+                <div>Date/Time</div>
+                <div>Submitter</div>
+                <div>Points</div>
+                <div>Status</div>
+                <div>Actions</div>
+            </div>
+            <div id="logEntries" class="log-entries">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading submissions...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- Pagination controls will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Get ward ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const wardId = urlParams.get('id');
+        
+        if (!wardId) {
+            window.location.href = '/';
+        }
+
+        let currentPage = 1;
+        const itemsPerPage = 20;
+        let allSubmissions = [];
+        let filteredSubmissions = [];
+        let isAdmin = false;
+
+        // Check if user is logged in as admin
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch('/api/user', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const user = await response.json();
+                    isAdmin = user.role === 'admin' || (user.role === 'ward_approver' && user.ward_id == wardId);
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+        }
+
+        // Load ward data
+        async function loadWardData() {
+            try {
+                const response = await fetch(`/api/ward/${wardId}/log`);
+                if (!response.ok) throw new Error('Failed to load ward data');
+                
+                const data = await response.json();
+                
+                // Update header
+                document.getElementById('wardName').textContent = data.ward_name;
+                document.getElementById('totalPoints').textContent = data.total_points || 0;
+                document.getElementById('pendingPoints').textContent = data.pending_points || 0;
+                document.getElementById('totalSubmissions').textContent = data.submissions.length;
+                
+                // Store submissions
+                allSubmissions = data.submissions;
+                
+                // Apply filters and render
+                applyFilters();
+                
+            } catch (error) {
+                console.error('Error loading ward data:', error);
+                document.getElementById('logEntries').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-text">Failed to load ward data</div>
+                        <a href="/" class="btn-primary">Back to Leaderboard</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+            
+            // Filter by status
+            if (statusFilter === 'all') {
+                filteredSubmissions = [...allSubmissions];
+            } else {
+                filteredSubmissions = allSubmissions.filter(s => s.status === statusFilter);
+            }
+            
+            // Sort
+            filteredSubmissions.sort((a, b) => {
+                switch (sortFilter) {
+                    case 'date-asc':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'points-desc':
+                        return b.points - a.points;
+                    case 'points-asc':
+                        return a.points - b.points;
+                    default: // date-desc
+                        return new Date(b.created_at) - new Date(a.created_at);
+                }
+            });
+            
+            currentPage = 1;
+            renderSubmissions();
+        }
+
+        // Render submissions
+        function renderSubmissions() {
+            const container = document.getElementById('logEntries');
+            
+            if (filteredSubmissions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-text">No submissions found</div>
+                        <a href="/submit-points" class="btn-primary">Submit Points</a>
+                    </div>
+                `;
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(filteredSubmissions.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageSubmissions = filteredSubmissions.slice(start, end);
+            
+            // Render entries
+            container.innerHTML = pageSubmissions.map(submission => {
+                const date = new Date(submission.created_at);
+                const dateStr = date.toLocaleDateString();
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                let statusBadge = '';
+                let statusClass = '';
+                let actions = '';
+                
+                switch (submission.status) {
+                    case 'approved':
+                        statusBadge = '<span class="status-badge status-approved">Approved</span>';
+                        statusClass = '';
+                        break;
+                    case 'pending':
+                        statusBadge = '<span class="status-badge status-pending">Pending</span>';
+                        statusClass = 'pending';
+                        if (isAdmin) {
+                            actions = `
+                                <button class="btn-small btn-approve" onclick="approveSubmission(${submission.id})">✓</button>
+                                <button class="btn-small btn-reject" onclick="rejectSubmission(${submission.id})">✗</button>
+                            `;
+                        }
+                        break;
+                    case 'rejected':
+                        statusBadge = '<span class="status-badge status-rejected">Rejected</span>';
+                        statusClass = 'rejected';
+                        break;
+                }
+                
+                return `
+                    <div class="log-entry ${statusClass}">
+                        <div>
+                            <div class="entry-date">${dateStr}</div>
+                            <div class="entry-time">${timeStr}</div>
+                        </div>
+                        <div>
+                            <div class="entry-name">${submission.submitter_name}</div>
+                            ${submission.note ? `<div class="entry-note">${submission.note}</div>` : ''}
+                        </div>
+                        <div class="entry-points">${submission.points}</div>
+                        <div>${statusBadge}</div>
+                        <div class="entry-actions">${actions}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Render pagination
+            renderPagination(totalPages);
+        }
+
+        // Render pagination controls
+        function renderPagination(totalPages) {
+            if (totalPages <= 1) {
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            document.getElementById('pagination').innerHTML = `
+                <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    Previous
+                </button>
+                <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next
+                </button>
+            `;
+        }
+
+        // Change page
+        function changePage(page) {
+            currentPage = page;
+            renderSubmissions();
+            window.scrollTo(0, 0);
+        }
+
+        // Approve submission
+        async function approveSubmission(id) {
+            if (!confirm('Approve these points?')) return;
+            
+            try {
+                const response = await fetch(`/api/points/${id}/approve`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadWardData();
+                } else {
+                    alert('Failed to approve points');
+                }
+            } catch (error) {
+                alert('Error approving points');
+            }
+        }
+
+        // Reject submission
+        async function rejectSubmission(id) {
+            if (!confirm('Reject these points?')) return;
+            
+            try {
+                const response = await fetch(`/api/points/${id}/reject`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadWardData();
+                } else {
+                    alert('Failed to reject points');
+                }
+            } catch (error) {
+                alert('Error rejecting points');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('sortFilter').addEventListener('change', applyFilters);
+
+        // Initialize
+        checkAdminStatus().then(() => loadWardData());
+    </script>
+</body>
+</html>

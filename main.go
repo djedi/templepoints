@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	_ "github.com/mattn/go-sqlite3"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Server struct {
@@ -101,6 +100,7 @@ func (s *Server) setupRoutes() {
 	s.router.HandleFunc("/submit-points", s.handleSubmitPointsPage).Methods("GET")
 	s.router.HandleFunc("/login", s.handleLoginPage).Methods("GET")
 	s.router.HandleFunc("/admin", s.handleAdminPage).Methods("GET")
+	s.router.HandleFunc("/ward-log", s.handleWardLogPage).Methods("GET")
 	
 	// API endpoints
 	api := s.router.PathPrefix("/api").Subrouter()
@@ -112,6 +112,7 @@ func (s *Server) setupRoutes() {
 	api.HandleFunc("/logout", s.handleLogout).Methods("POST")
 	api.HandleFunc("/user", s.handleGetUser).Methods("GET")
 	api.HandleFunc("/submissions", s.handleGetSubmissions).Methods("GET")
+	api.HandleFunc("/ward/{id}/log", s.handleGetWardLog).Methods("GET")
 	
 	// WebSocket endpoint
 	s.router.HandleFunc("/ws", s.handleWebSocket)
@@ -131,6 +132,10 @@ func (s *Server) handleLoginPage(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleAdminPage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "admin.html")
+}
+
+func (s *Server) handleWardLogPage(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "ward-log.html")
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {

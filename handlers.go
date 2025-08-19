@@ -471,6 +471,64 @@ func (s *Server) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+func (s *Server) handleGetWardLog(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	wardID := vars["id"]
+
+	// Get ward info
+	var wardName string
+	var totalPoints, pendingPoints int
+	err := s.db.QueryRow(`
+		SELECT name, points, pending_points 
+		FROM wards 
+		WHERE id = ?
+	`, wardID).Scan(&wardName, &totalPoints, &pendingPoints)
+
+	if err != nil {
+		http.Error(w, "Ward not found", http.StatusNotFound)
+		return
+	}
+
+	// Get all submissions for this ward
+	query := `
+		SELECT id, submitter_name, points, note, status, created_at
+		FROM point_submissions
+		WHERE ward_id = ?
+		ORDER BY created_at DESC
+	`
+
+	rows, err := s.db.Query(query, wardID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		log.Printf("Error querying ward submissions: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	var submissions []PointSubmission
+	for rows.Next() {
+		var sub PointSubmission
+		err := rows.Scan(&sub.ID, &sub.SubmitterName, &sub.Points, 
+			&sub.Note, &sub.Status, &sub.CreatedAt)
+		if err != nil {
+			log.Printf("Error scanning submission: %v", err)
+			continue
+		}
+		submissions = append(submissions, sub)
+	}
+
+	response := map[string]interface{}{
+		"ward_id":        wardID,
+		"ward_name":      wardName,
+		"total_points":   totalPoints,
+		"pending_points": pendingPoints,
+		"submissions":    submissions,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func (s *Server) handleGetSubmissions(w http.ResponseWriter, r *http.Request) {
 	userID := s.getUserIDFromSession(r)
 	if userID == 0 {
