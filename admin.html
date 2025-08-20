@@ -444,7 +444,8 @@
             <button class="nav-tab active" data-tab="pending">Pending Approvals</button>
             <button class="nav-tab" data-tab="approved">Recently Approved</button>
             <button class="nav-tab" data-tab="rejected">Recently Rejected</button>
-            <button class="nav-tab" data-tab="create-approver" id="create-approver-tab" style="display: none;">Create Ward Approver</button>
+            <button class="nav-tab" data-tab="create-user" id="create-user-tab" style="display: none;">Create User</button>
+            <button class="nav-tab" data-tab="profile">My Profile</button>
         </div>
 
         <div class="dashboard-grid">
@@ -462,18 +463,27 @@
                 </div>
             </div>
 
-            <div class="card" id="create-approver-section" style="display: none;">
+            <div class="card" id="create-user-section" style="display: none;">
                 <div class="card-header">
-                    <h2 class="card-title">Create Ward Approver Account</h2>
+                    <h2 class="card-title">Create User Account</h2>
                 </div>
                 
-                <div id="success-message" class="success-message"></div>
-                <div id="error-message" class="error-message"></div>
+                <div id="create-success-message" class="success-message"></div>
+                <div id="create-error-message" class="error-message"></div>
                 
-                <form id="create-approver-form">
+                <form id="create-user-form">
                     <div class="form-group">
+                        <label class="form-label" for="role-select">User Role</label>
+                        <select class="form-select" id="role-select" name="role" required>
+                            <option value="">Choose a role...</option>
+                            <option value="admin">Administrator</option>
+                            <option value="ward_approver">Ward Approver</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="ward-select-group" style="display: none;">
                         <label class="form-label" for="ward-select">Select Ward</label>
-                        <select class="form-select" id="ward-select" name="ward_id" required>
+                        <select class="form-select" id="ward-select" name="ward_id">
                             <option value="">Choose a ward...</option>
                         </select>
                     </div>
@@ -481,7 +491,7 @@
                     <div class="form-group">
                         <label class="form-label" for="email-input">Email Address</label>
                         <input type="email" class="form-input" id="email-input" name="email" 
-                               placeholder="wardleader@example.com" required>
+                               placeholder="user@example.com" required>
                     </div>
                     
                     <div class="form-group">
@@ -496,7 +506,48 @@
                                placeholder="Re-enter password" required minlength="8">
                     </div>
                     
-                    <button type="submit" class="btn-primary">Create Ward Approver Account</button>
+                    <button type="submit" class="btn-primary">Create User Account</button>
+                </form>
+            </div>
+
+            <div class="card" id="profile-section" style="display: none;">
+                <div class="card-header">
+                    <h2 class="card-title">My Profile</h2>
+                </div>
+                
+                <div id="profile-success-message" class="success-message"></div>
+                <div id="profile-error-message" class="error-message"></div>
+                
+                <form id="update-profile-form">
+                    <div class="form-group">
+                        <label class="form-label" for="profile-email">Email Address</label>
+                        <input type="email" class="form-input" id="profile-email" name="email" 
+                               placeholder="your@email.com">
+                    </div>
+                    
+                    <hr style="margin: 2rem 0; border: none; border-top: 1px solid #e0e0e0;">
+                    
+                    <h3 style="margin-bottom: 1rem; color: #333;">Change Password</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="old-password">Current Password</label>
+                        <input type="password" class="form-input" id="old-password" name="old_password" 
+                               placeholder="Enter current password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="new-password">New Password</label>
+                        <input type="password" class="form-input" id="new-password" name="new_password" 
+                               placeholder="Enter new password" minlength="8">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-new-password">Confirm New Password</label>
+                        <input type="password" class="form-input" id="confirm-new-password" 
+                               placeholder="Re-enter new password" minlength="8">
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Update Profile</button>
                 </form>
             </div>
         </div>
@@ -520,10 +571,11 @@
                 
                 currentUser = await response.json();
                 document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('profile-email').value = currentUser.email;
                 
-                // Show Create Ward Approver tab only for admin users
+                // Show Create User tab only for admin users
                 if (currentUser.role === 'admin') {
-                    document.getElementById('create-approver-tab').style.display = 'block';
+                    document.getElementById('create-user-tab').style.display = 'block';
                 }
                 
                 loadSubmissions();
@@ -626,8 +678,34 @@
                 });
                 
                 if (response.ok) {
+                    // Remove the approved item from the list immediately
+                    const submissionItem = document.querySelector(`[data-id="${id}"]`);
+                    if (submissionItem) {
+                        submissionItem.style.opacity = '0';
+                        submissionItem.style.transform = 'translateX(100px)';
+                        setTimeout(() => submissionItem.remove(), 300);
+                    }
+                    
+                    // Update the submissions array
+                    submissions = submissions.filter(s => s.id !== id);
+                    
+                    // Update stats
+                    updateStats();
+                    
+                    // Check if list is now empty
+                    if (submissions.length === 0) {
+                        document.getElementById('pendingSubmissions').innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">✅</div>
+                                <p>All caught up! No pending submissions.</p>
+                            </div>
+                        `;
+                        document.getElementById('pendingBadge').textContent = '0 pending';
+                    } else {
+                        document.getElementById('pendingBadge').textContent = `${submissions.length} pending`;
+                    }
+                    
                     showNotification('Points approved successfully!', 'success');
-                    loadSubmissions();
                 } else {
                     showNotification('Failed to approve points', 'error');
                 }
@@ -715,8 +793,22 @@
             }
         }
 
-        // Handle form submission
-        document.getElementById('create-approver-form').addEventListener('submit', async (e) => {
+        // Handle role selection change
+        document.getElementById('role-select').addEventListener('change', function() {
+            const wardGroup = document.getElementById('ward-select-group');
+            const wardSelect = document.getElementById('ward-select');
+            
+            if (this.value === 'ward_approver') {
+                wardGroup.style.display = 'block';
+                wardSelect.setAttribute('required', 'required');
+            } else {
+                wardGroup.style.display = 'none';
+                wardSelect.removeAttribute('required');
+            }
+        });
+
+        // Handle create user form submission
+        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const password = document.getElementById('password-input').value;
@@ -727,14 +819,16 @@
                 return;
             }
             
+            const role = document.getElementById('role-select').value;
             const formData = {
                 email: document.getElementById('email-input').value,
                 password: password,
-                ward_id: parseInt(document.getElementById('ward-select').value)
+                role: role,
+                ward_id: role === 'ward_approver' ? parseInt(document.getElementById('ward-select').value) : 0
             };
             
             try {
-                const response = await fetch('/api/create-ward-approver', {
+                const response = await fetch('/api/create-user', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -745,19 +839,90 @@
                 
                 if (response.ok) {
                     const result = await response.json();
-                    showSuccess(`Ward approver created successfully for ${result.ward_name}!`);
-                    document.getElementById('create-approver-form').reset();
+                    const message = result.role === 'admin' 
+                        ? `Administrator account created successfully!`
+                        : `Ward approver created successfully for ${result.ward_name}!`;
+                    showCreateSuccess(message);
+                    document.getElementById('create-user-form').reset();
+                    document.getElementById('ward-select-group').style.display = 'none';
                 } else {
                     const errorText = await response.text();
-                    showError(errorText || 'Failed to create ward approver');
+                    showCreateError(errorText || 'Failed to create user');
                 }
             } catch (error) {
-                showError('Error creating ward approver: ' + error.message);
+                showCreateError('Error creating user: ' + error.message);
             }
         });
 
-        function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
+        // Handle profile update form
+        document.getElementById('update-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('new-password').value;
+            const confirmNewPassword = document.getElementById('confirm-new-password').value;
+            
+            if (newPassword && newPassword !== confirmNewPassword) {
+                showProfileError('New passwords do not match');
+                return;
+            }
+            
+            const formData = {
+                email: document.getElementById('profile-email').value,
+                old_password: document.getElementById('old-password').value,
+                new_password: newPassword
+            };
+            
+            // Only send non-empty fields
+            const updateData = {};
+            if (formData.email && formData.email !== currentUser.email) {
+                updateData.email = formData.email;
+            }
+            if (formData.new_password) {
+                if (!formData.old_password) {
+                    showProfileError('Current password is required to set new password');
+                    return;
+                }
+                updateData.old_password = formData.old_password;
+                updateData.new_password = formData.new_password;
+            }
+            
+            if (Object.keys(updateData).length === 0) {
+                showProfileError('No changes to save');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok) {
+                    showProfileSuccess('Profile updated successfully!');
+                    // Update displayed email if changed
+                    if (updateData.email) {
+                        currentUser.email = updateData.email;
+                        document.getElementById('userEmail').textContent = updateData.email;
+                    }
+                    // Clear password fields
+                    document.getElementById('old-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-new-password').value = '';
+                } else {
+                    const errorText = await response.text();
+                    showProfileError(errorText || 'Failed to update profile');
+                }
+            } catch (error) {
+                showProfileError('Error updating profile: ' + error.message);
+            }
+        });
+
+        function showCreateSuccess(message) {
+            const successDiv = document.getElementById('create-success-message');
             successDiv.textContent = message;
             successDiv.style.display = 'block';
             document.getElementById('error-message').style.display = 'none';
@@ -767,11 +932,33 @@
             }, 5000);
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
+        function showCreateError(message) {
+            const errorDiv = document.getElementById('create-error-message');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
             document.getElementById('success-message').style.display = 'none';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showProfileSuccess(message) {
+            const successDiv = document.getElementById('profile-success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('profile-error-message').style.display = 'none';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showProfileError(message) {
+            const errorDiv = document.getElementById('profile-error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('profile-success-message').style.display = 'none';
             
             setTimeout(() => {
                 errorDiv.style.display = 'none';
@@ -788,12 +975,15 @@
                 
                 // Hide all sections
                 document.querySelector('.card:has(#pendingSubmissions)').style.display = 'none';
-                document.getElementById('create-approver-section').style.display = 'none';
+                document.getElementById('create-user-section').style.display = 'none';
+                document.getElementById('profile-section').style.display = 'none';
                 
                 // Show appropriate section
-                if (tabType === 'create-approver') {
-                    document.getElementById('create-approver-section').style.display = 'block';
+                if (tabType === 'create-user') {
+                    document.getElementById('create-user-section').style.display = 'block';
                     loadWards(); // Load wards when tab is opened
+                } else if (tabType === 'profile') {
+                    document.getElementById('profile-section').style.display = 'block';
                 } else {
                     document.querySelector('.card:has(#pendingSubmissions)').style.display = 'block';
                     // Load appropriate data based on tab

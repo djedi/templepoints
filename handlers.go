@@ -633,8 +633,8 @@ func (s *Server) handleAuthStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Create ward approver endpoint (admin only)
-func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request) {
+// Create user endpoint (admin only - can create admins or ward approvers)
+func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	// Check if user is admin
 	userID := s.getUserIDFromSession(r)
 	if userID == 0 {
@@ -653,6 +653,7 @@ func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request
 	var req struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Role     string `json:"role"`
 		WardID   int    `json:"ward_id"`
 	}
 	
@@ -662,8 +663,20 @@ func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request
 	}
 	
 	// Validate input
-	if req.Email == "" || req.Password == "" || req.WardID == 0 {
-		http.Error(w, "Email, password, and ward are required", http.StatusBadRequest)
+	if req.Email == "" || req.Password == "" || req.Role == "" {
+		http.Error(w, "Email, password, and role are required", http.StatusBadRequest)
+		return
+	}
+	
+	// Validate role
+	if req.Role != "admin" && req.Role != "ward_approver" {
+		http.Error(w, "Invalid role - must be 'admin' or 'ward_approver'", http.StatusBadRequest)
+		return
+	}
+	
+	// Ward approvers must have a ward assigned
+	if req.Role == "ward_approver" && req.WardID == 0 {
+		http.Error(w, "Ward is required for ward approvers", http.StatusBadRequest)
 		return
 	}
 	
@@ -675,16 +688,24 @@ func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request
 	}
 	
 	// Create user
-	result, err := s.db.Exec(`
-		INSERT INTO users (email, password, role, ward_id) 
-		VALUES (?, ?, 'ward_approver', ?)
-	`, req.Email, string(hashedPassword), req.WardID)
+	var result sql.Result
+	if req.Role == "admin" {
+		result, err = s.db.Exec(`
+			INSERT INTO users (email, password, role) 
+			VALUES (?, ?, ?)
+		`, req.Email, string(hashedPassword), req.Role)
+	} else {
+		result, err = s.db.Exec(`
+			INSERT INTO users (email, password, role, ward_id) 
+			VALUES (?, ?, ?, ?)
+		`, req.Email, string(hashedPassword), req.Role, req.WardID)
+	}
 	
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint") {
 			http.Error(w, "Email already exists", http.StatusConflict)
 		} else {
-			log.Printf("Error creating ward approver: %v", err)
+			log.Printf("Error creating user: %v", err)
 			http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		}
 		return
@@ -692,12 +713,19 @@ func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request
 	
 	newUserID, _ := result.LastInsertId()
 	
-	// Get ward name for response
+	// Get ward name for response if applicable
 	var wardName string
-	s.db.QueryRow(`SELECT name FROM wards WHERE id = ?`, req.WardID).Scan(&wardName)
+	if req.WardID > 0 {
+		s.db.QueryRow(`SELECT name FROM wards WHERE id = ?`, req.WardID).Scan(&wardName)
+	}
 	
 	// Log the activity
-	s.logActivity(req.WardID, &userID, "ward_approver_created", fmt.Sprintf("Created ward approver: %s", req.Email), 0)
+	activityDetail := fmt.Sprintf("Created %s: %s", req.Role, req.Email)
+	if req.WardID > 0 {
+		s.logActivity(req.WardID, &userID, "user_created", activityDetail, 0)
+	} else {
+		s.logActivity(0, &userID, "user_created", activityDetail, 0)
+	}
 	
 	// Send success response
 	w.Header().Set("Content-Type", "application/json")
@@ -705,7 +733,86 @@ func (s *Server) handleCreateWardApprover(w http.ResponseWriter, r *http.Request
 		"success": true,
 		"user_id": newUserID,
 		"email": req.Email,
+		"role": req.Role,
 		"ward_name": wardName,
+	})
+}
+
+// Update user profile endpoint (change email/password)
+func (s *Server) handleUpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userID := s.getUserIDFromSession(r)
+	if userID == 0 {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	
+	// Parse request body
+	var req struct {
+		Email       string `json:"email"`
+		OldPassword string `json:"old_password"`
+		NewPassword string `json:"new_password"`
+	}
+	
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	
+	// Get current user info
+	var currentEmail, currentPassword string
+	err := s.db.QueryRow(`SELECT email, password FROM users WHERE id = ?`, userID).Scan(&currentEmail, &currentPassword)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+	
+	// If changing password, verify old password
+	if req.NewPassword != "" {
+		if req.OldPassword == "" {
+			http.Error(w, "Old password is required to set new password", http.StatusBadRequest)
+			return
+		}
+		
+		if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(req.OldPassword)); err != nil {
+			http.Error(w, "Incorrect old password", http.StatusUnauthorized)
+			return
+		}
+		
+		// Hash new password
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Error processing password", http.StatusInternalServerError)
+			return
+		}
+		
+		// Update password
+		_, err = s.db.Exec(`UPDATE users SET password = ? WHERE id = ?`, string(hashedPassword), userID)
+		if err != nil {
+			log.Printf("Error updating password: %v", err)
+			http.Error(w, "Failed to update password", http.StatusInternalServerError)
+			return
+		}
+	}
+	
+	// Update email if provided and different
+	if req.Email != "" && req.Email != currentEmail {
+		_, err = s.db.Exec(`UPDATE users SET email = ? WHERE id = ?`, req.Email, userID)
+		if err != nil {
+			if strings.Contains(err.Error(), "UNIQUE constraint") {
+				http.Error(w, "Email already exists", http.StatusConflict)
+			} else {
+				log.Printf("Error updating email: %v", err)
+				http.Error(w, "Failed to update email", http.StatusInternalServerError)
+			}
+			return
+		}
+	}
+	
+	// Send success response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "Profile updated successfully",
 	})
 }
 
